@@ -1,0 +1,267 @@
+---
+title: "DATA 605 Final Exam"
+author: "Samuel I Kigamba"
+date: "May 10, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(gridExtra)
+library(scales)
+library(corrplot)
+library(RColorBrewer)
+library(Matrix)
+library(MASS)
+
+```
+
+Computational Mathematics
+
+Your final is due by the end of the last week of class.  You should post your solutions to your GitHub account or RPubs.  
+You are also expected to make a short presentation via YouTube  and post that recording to the board.  
+This project will show off your ability to understand the elements of the class. 
+
+Problem 1.
+
+Using R, generate a random variable X that has 10,000 random uniform numbers from 1 to N, where N can be any number of your choosing greater than or equal to 6.  Then generate a random variable Y that has 10,000 random normal numbers with a mean of:
+
+\[\mu=\sigma=(N+1)/2\]  
+
+```{r}
+
+set.seed(100)
+
+N = 6
+
+n = 10000
+
+X = runif(n, min=1, max=N)
+
+Y = rnorm(n, mean = (N+1)/2, sd = (N+1)/2)
+
+dfXY = data.frame(cbind(X, Y))
+
+dfXY[0:5,1:2]
+
+```
+
+Probability.   Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  Interpret the meaning of all probabilities. 5 points 
+
+
+
+```{r}
+x = quantile(X, 1)
+x
+```
+
+```{r}
+y = quantile(Y, 0.5)
+y
+
+```
+
+
+
+a.  P(X>x | X>y)	
+
+```{r}
+# Number of observations where X is greater than y the 2nd quantile of Y
+nXy = nrow(subset(dfXY, X > y))
+nXy
+
+
+# Probability of X is higher than x, the 4th quantile of X given that X is greater than y, the second quantile of Y.
+pa = nrow(subset(dfXY, X > x & X > y))/nXy
+pa
+
+```
+
+b.  P(X>x, Y>y)		
+
+```{r}
+# Probability that both X and Y are greater than x, the 4th quantile of X and y, the second quantile of Y respectively.
+
+pb = nrow(subset(dfXY, X > x & Y > y))/n
+pb
+
+```
+
+c.  P(X<x | X>y)
+
+```{r}
+
+# Probability that X is less that x, the 4th quantile of X given that X is greater than Y
+
+pc = nrow(subset(dfXY, X < x & X > y))/nXy
+pc
+
+
+```
+
+
+5 points.   
+Investigate whether P(X>x and Y>y)=P(X>x)P(Y>y) by building a table and evaluating the marginal and joint probabilities.
+
+```{r}
+
+A1 <- c(sum(X <= x & Y <= y), sum(X > x & Y <= y))
+B1 <- c(sum(X <= x & Y > y), sum(X > x & Y > y))
+
+ct_matrix <- matrix(c(A1, B1), nrow = 2)
+ct_matrix <- rbind(ct_matrix, apply(ct_matrix, 2, sum))
+ct_matrix <- cbind(ct_matrix, apply(ct_matrix, 1, sum))
+
+xy <- c("<=1st quartile", ">1st quartile", "Total")
+countDF <- data.frame(xy, ct_matrix)
+colnames(countDF) <- c("x/y", "<=1st quartile", ">1st quartile", "Total")
+print(countDF)
+
+```
+
+```{r}
+
+A <- countDF[2, 4]
+B <- countDF[3, 3]
+A_B <- countDF[2, 3]
+tot <- countDF[3, 4]
+
+Prob_A <- A/tot
+Prob_B <- B/tot
+prob_A_B <- A_B/tot
+
+print(prob_A_B)
+
+```
+So P(AB) = 0.6534247
+
+```{r}
+
+Prob_A_Prob_B <- Prob_A * Prob_B
+print(Prob_A_Prob_B)
+
+```
+
+So, here P(AB) is NOT equal to P(A)P(B). Therefore, variable A and B are not independent and obviously splitting the training data did not make them independent.
+
+
+
+5 points.  
+Check to see if independence holds by using Fisher's Exact Test and the Chi Square Test.  What is the difference between the two? Which is most appropriate?
+
+
+```{r}
+
+chiMatrix <- matrix(c(A1, B1), nrow = 2)
+chisq.test(chiMatrix)
+
+```
+
+Since the p-value is significantly smaller we can reject the null hypothesis, which agree with the above mathmatical test that the variables are dependent.
+
+
+
+
+Problem 2
+
+You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  https://www.kaggle.com/c/house-prices-advanced-regression-techniques .  I want you to do the following.
+
+5 points.  
+Descriptive and Inferential Statistics. Provide univariate descriptive statistics and appropriate plots for the training data set.  Provide a scatterplot matrix for at least two of the independent variables and the dependent variable. Derive a correlation matrix for any three quantitative variables in the dataset.  Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval.  Discuss the meaning of your analysis.  Would you be worried about familywise error? Why or why not?
+
+5 points. 
+Linear Algebra and Correlation.  Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.
+
+5 points.  
+Calculus-Based Probability & Statistics.  Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.  Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  Find the optimal value of lambda for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, lambda)). Plot a histogram and compare it with a histogram of your original variable.   Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).   Also generate a 95% confidence interval from the empirical data, assuming normality.  Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.
+
+
+
+#################################################################################################################
+
+Modeling.  Build some type of multiple regression  model and submit your model to the competition board.  Provide your complete model summary and results with analysis.  10 points.
+
+Report your Kaggle.com user name and score.
+
+
+```{r}
+
+#Load Training data set into a data frame and review the summary statistics for missing and or limited features.
+
+#Training set
+hd_tr = read.csv("train.csv", sep = ",", stringsAsFactors = FALSE)
+
+summary(hd_tr)
+
+```
+
+
+```{r}
+
+# Remove features with missing or limited data as evaluated from the summary statistics above.
+hd_train <- hd_tr[, c("MSSubClass", "MSZoning", "LotArea", "LotShape", "LotConfig", "Neighborhood", "Condition1", 
+                      "Street", "BldgType", "HouseStyle", "OverallQual", "OverallCond", "YearBuilt", "YearRemodAdd",
+                      "RoofStyle", "Exterior2nd", "MasVnrType", "ExterQual", "BsmtQual", "BsmtCond", "BsmtExposure",
+                      "BsmtFinType1", "BsmtFinSF1", "BsmtFinType2", "TotalBsmtSF", "HeatingQC", "Electrical", 
+                      "X1stFlrSF", "GrLivArea", "BsmtFullBath", "BsmtHalfBath", "FullBath", "HalfBath", "BedroomAbvGr",
+                      "KitchenAbvGr", "KitchenQual", "TotRmsAbvGrd", "Functional", "GarageArea", "PavedDrive", 
+                      "WoodDeckSF", "OpenPorchSF", "YrSold", "SaleType", "SaleCondition", "SalePrice")]
+
+summary(hd_train)
+
+```
+
+```{r}
+
+#Remove all Na's from the training data set
+hd_train = na.omit(hd_train)
+
+# Generate an initial regression model
+Model_1 = lm(SalePrice ~ ., data = hd_train)
+
+#Generate Summary Statisics
+summary(Model_1)
+
+```
+
+The model produces a Multiple R-Squared of 0.8833 which is great. We can interpret this to mean that 88.33% variance in the saleprice van be explained by the predictor variables in the current model.
+The F-Statistic is 62.26 on 153 and 1258 degrees of freedom. The p-value is very small.
+
+Let us test how good our model performs on the test data set.
+
+```{r}
+
+#Load Testing set
+hd_test = read.csv("test.csv", sep = ",")
+
+#Predict the saleprice for the testing data set
+PredictedDataModel = hd_test
+
+PredictedDataModel$SalePrice = predict(Model_1, hd_test)
+
+# Set the Id and SalePrice colums to be loaded into Kaggle Data Frame
+Id = hd_test$Id
+SalePrice = PredictedDataModel$SalePrice
+
+
+# Combine the ID and the model predicted SalePrice values
+KaggleData_ModelDF = data.frame(cbind(Id, SalePrice))
+
+#Replace all missing values with 0 in the Kaggle Data Frame
+kaggleData_modelDF[is.na(kaggleData_modelDF)] = 0
+kaggleData_modelDF = replace(kaggleData_modelDF, is.na(kaggleData_modelDF), 0)
+
+#View the first 5 rows of the data frame
+print(head(kaggleData_modelDF, 30))
+
+# Write the predicted values into a KaggleData_Model .csv for submission.
+write.csv(kaggleData_modelDF,file = "kaggleData_model.csv", row.names = FALSE)
+
+```
+
+
