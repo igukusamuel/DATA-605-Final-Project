@@ -3,16 +3,8 @@ title: "DATA 605 Final Exam"
 author: "Samuel I Kigamba"
 date: "May 20, 2020"
 output:
-  html_document:
-    css:
-    highlight: pygments
-    theme: cerulean
-    toc: true
-    toc_float: true
-    code_folding: show
-  ioslides_presentation: default
-  pdf_document: default
-  slidy_presentation: default
+  html_document: slidy_presentation
+    
 ---
 
 ```{r setup, include=FALSE}
@@ -40,7 +32,7 @@ You are also expected to make a short presentation via YouTube  and post that re
 This project will show off your ability to understand the elements of the class. 
 
 
-# Problem 1
+## Problem 1
 
 Using R, generate a random variable X that has 10,000 random uniform numbers from 1 to N, where N can be any number of your choosing greater than or equal to 6.  Then generate a random variable Y that has 10,000 random normal numbers with a mean of:
 
@@ -71,7 +63,7 @@ dfXY[0:5,1:2]
 \clearpage
 
 
-## Probability
+### Probability
 
 Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  
 
@@ -94,7 +86,7 @@ y
 
 Calculate as a minimum the below probabilities a through c. Interpret the meaning of all probabilities.
 
-### a.  P(X>x | X>y)	
+#### a.  P(X>x | X>y)	
 
 ```{r}
 # Number of observations where X is greater than y, the 1st quantile of Y
@@ -108,7 +100,7 @@ pa
 ```
 The probability is 0.54 or 54%
 
-### b.  P(X>x, Y>y)		
+#### b.  P(X>x, Y>y)		
 
 ```{r}
 # Probability that both X and Y are greater than x, the median of X and y, the first quantile of Y respectively.
@@ -118,7 +110,7 @@ pb
 ```
 The probability is 0.3755 or 37.55%
 
-### c.  P(X<x | X>y)
+#### c.  P(X<x | X>y)
 
 ```{r}
 # Probability that X is less that x, the median of X given that X is greater than Y
@@ -200,7 +192,7 @@ fisher.test(Matrix, simulate.p.value=TRUE)
 ```
 
 
-# Problem 2
+## Problem 2
 
 You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  https://www.kaggle.com/c/house-prices-advanced-regression-techniques .  
 I want you to do the following.
@@ -220,7 +212,7 @@ Z = train$GarageArea
 
 \clearpage
 
-## Descriptive and Inferential Statistics.
+### Descriptive and Inferential Statistics.
 
 Provide univariate descriptive statistics and appropriate plots for the training data set.  
 
@@ -367,7 +359,7 @@ Would you be worried about familywise error? Why or why not?
 \clearpage
 
  
-## Linear Algebra and Correlation.
+### Linear Algebra and Correlation.
 
 Invert your correlation matrix from above. 
 This is known as the precision matrix and contains variance inflation factors on the diagonal.
@@ -460,8 +452,8 @@ prec_L %*% prec_U
 
 \clearpage
 
-
-## Calculus-Based Probability & Statistics.
+  
+### Calculus-Based Probability & Statistics.
 
 Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.
 
@@ -559,12 +551,12 @@ Finally, provide the empirical 5th percentile and 95th percentile of the data.  
 quantile(z, probs = c(0.05, 0.95))
 ```
 
-# Modeling.  
+## Modeling.  
 
 Build some type of multiple regression  model and submit your model to the competition board.  
 Provide your complete model summary and results with analysis.
 
-## Training Data and Model Generation
+### Training Data and Model Generation
 
 ```{r}
 
@@ -608,7 +600,7 @@ The F-Statistic is 62.26 on 153 and 1258 degrees of freedom. The p-value is very
 
 \clearpage
 
-## Model Testing and submission
+### Model Testing and submission
 
 Let us test how good our model performs on the test data set.
 
@@ -643,7 +635,7 @@ print(head(DF, 5))
 
 \clearpage
 
-## Kaggle Submission - Score
+### Kaggle Submission - Score
 
 Report your Kaggle.com user name and score.
 
@@ -654,3 +646,6 @@ Kaggle Score: 2.50090
 See submission documents : https://github.com/igukusamuel/DATA-605-Final-Project
 
 ![](https://github.com/igukusamuel/DATA-605-Final-Project/blob/master/Kaggle_Submission.PNG)
+
+
+
