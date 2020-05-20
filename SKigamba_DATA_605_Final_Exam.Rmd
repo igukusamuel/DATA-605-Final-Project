@@ -1,8 +1,10 @@
 ---
 title: "DATA 605 Final Exam"
 author: "Samuel I Kigamba"
-date: "May 10, 2020"
-output: html_document
+date: "May 20, 2020"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,6 +20,7 @@ library(corrplot)
 library(RColorBrewer)
 library(Matrix)
 library(MASS)
+library(psych)
 
 ```
 
@@ -26,6 +29,8 @@ Computational Mathematics
 Your final is due by the end of the last week of class.  You should post your solutions to your GitHub account or RPubs.  
 You are also expected to make a short presentation via YouTube  and post that recording to the board.  
 This project will show off your ability to understand the elements of the class. 
+
+#################################################################################################################
 
 Problem 1.
 
@@ -37,13 +42,15 @@ Using R, generate a random variable X that has 10,000 random uniform numbers fro
 
 set.seed(100)
 
-N = 6
+N = 10
 
 n = 10000
 
-X = runif(n, min=1, max=N)
+X = runif(n, 1, N)
+
 
 Y = rnorm(n, mean = (N+1)/2, sd = (N+1)/2)
+
 
 dfXY = data.frame(cbind(X, Y))
 
@@ -51,17 +58,21 @@ dfXY[0:5,1:2]
 
 ```
 
-Probability.   Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  Interpret the meaning of all probabilities. 5 points 
+*Probability*
+
+Calculate as a minimum the below probabilities a through c.  
+Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  
+Interpret the meaning of all probabilities. 5 points 
 
 
 
 ```{r}
-x = quantile(X, 1)
+x = median(X)
 x
 ```
 
 ```{r}
-y = quantile(Y, 0.5)
+y = quantile(Y, 0.25)
 y
 
 ```
@@ -71,12 +82,12 @@ y
 a.  P(X>x | X>y)	
 
 ```{r}
-# Number of observations where X is greater than y the 2nd quantile of Y
+# Number of observations where X is greater than y, the 2nd quantile of Y
 nXy = nrow(subset(dfXY, X > y))
 nXy
 
 
-# Probability of X is higher than x, the 4th quantile of X given that X is greater than y, the second quantile of Y.
+# Probability of X is higher than x, the median of X given that X is greater than y, the first quantile of Y.
 pa = nrow(subset(dfXY, X > x & X > y))/nXy
 pa
 
@@ -85,7 +96,7 @@ pa
 b.  P(X>x, Y>y)		
 
 ```{r}
-# Probability that both X and Y are greater than x, the 4th quantile of X and y, the second quantile of Y respectively.
+# Probability that both X and Y are greater than x, the median of X and y, the first quantile of Y respectively.
 
 pb = nrow(subset(dfXY, X > x & Y > y))/n
 pb
@@ -96,7 +107,7 @@ c.  P(X<x | X>y)
 
 ```{r}
 
-# Probability that X is less that x, the 4th quantile of X given that X is greater than Y
+# Probability that X is less that x, the median of X given that X is greater than Y
 
 pc = nrow(subset(dfXY, X < x & X > y))/nXy
 pc
@@ -138,17 +149,17 @@ prob_A_B <- A_B/tot
 print(prob_A_B)
 
 ```
-So P(AB) = 0.6534247
+So P(AB) = 0.3755
 
 ```{r}
 
-Prob_A_Prob_B <- Prob_A * Prob_B
+Prob_A_Prob_B = Prob_A * Prob_B
+
 print(Prob_A_Prob_B)
 
 ```
 
-So, here P(AB) is NOT equal to P(A)P(B). Therefore, variable A and B are not independent and obviously splitting the training data did not make them independent.
-
+So, P(X>x and Y>y)=P(X>x)P(Y>y) is TRUE.
 
 
 5 points.  
@@ -157,28 +168,341 @@ Check to see if independence holds by using Fisher's Exact Test and the Chi Squa
 
 ```{r}
 
-chiMatrix <- matrix(c(A1, B1), nrow = 2)
-chisq.test(chiMatrix)
+Matrix <- matrix(c(A1, B1), nrow = 2)
+chisq.test(Matrix)
 
 ```
 
-Since the p-value is significantly smaller we can reject the null hypothesis, which agree with the above mathmatical test that the variables are dependent.
+```{r}
+
+fisher.test(Matrix, simulate.p.value=TRUE)
+
+```
+
+*Since the p-value is significantly high, we fail to reject the null hypothesis.*
 
 
-
+#################################################################################################################
 
 Problem 2
 
 You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  https://www.kaggle.com/c/house-prices-advanced-regression-techniques .  I want you to do the following.
 
-5 points.  
-Descriptive and Inferential Statistics. Provide univariate descriptive statistics and appropriate plots for the training data set.  Provide a scatterplot matrix for at least two of the independent variables and the dependent variable. Derive a correlation matrix for any three quantitative variables in the dataset.  Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval.  Discuss the meaning of your analysis.  Would you be worried about familywise error? Why or why not?
+```{r}
 
-5 points. 
-Linear Algebra and Correlation.  Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.
+#Training set
+train = read.csv("https://raw.githubusercontent.com/igukusamuel/DATA-605-Final-Project/master/train.csv")
+dim(train)
 
-5 points.  
-Calculus-Based Probability & Statistics.  Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.  Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  Find the optimal value of lambda for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, lambda)). Plot a histogram and compare it with a histogram of your original variable.   Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).   Also generate a 95% confidence interval from the empirical data, assuming normality.  Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.
+X = train$LotArea
+Y = train$SalePrice
+Z = train$GarageArea
+
+```
+
+*Descriptive and Inferential Statistics.*
+
+Provide univariate descriptive statistics and appropriate plots for the training data set.  
+
+```{r}
+# Descriptive statistics on LotArea
+summary(X)
+describe(X)
+
+```
+
+*There are 1460 obsevarions with LotArea ranging from 1300SF to 215,245SF. The average LotArea is 10,516SF.*
+
+```{r}
+# BoxPlot and Histograms for the LotArea
+par(mfrow=c(1,2))
+boxplot(X, main="LotArea BoxPlot")
+hist(X, breaks = 20, main = "LotArea Histogram")
+
+```
+
+*The distribution of the LotArea is right skewed with a alot of outliers.*
+
+```{r}
+# Descriptive statistics on SalePrice
+summary(Y)
+describe(Y)
+
+```
+*There are 1460 obsevarions with SalePrice ranging from $34,900 to $755,000. The average SalePrice is $180,921.*
+
+```{r}
+# BoxPlot and Histograms for the SalePrice
+par(mfrow=c(1,2))
+boxplot(Y, main="SalePrice BoxPlot")
+hist(Y, breaks = 30, main = "SalePrice Histogram")
+
+```
+
+*The distribution of the SalePrice is right skewed with a couple of outliers.*
+
+```{r}
+# Descriptive statistics on GarageArea
+summary(Z)
+describe(Z)
+
+```
+
+*There are 1460 obsevarions with GarageArea ranging from 0SF to 1,418SF. The average GarageArea is 473SF.*
+
+
+```{r}
+# BoxPlot and Histograms for the GarageArea
+par(mfrow=c(1,2))
+boxplot(Z, main="GarageArea BoxPlot")
+hist(Z, breaks = 30, main = "GarageArea Histogram")
+
+```
+
+*The distribution of the GarageArea is right skewed with a few observable outliers.*
+
+Provide a scatterplot matrix for at least two of the independent variables and the dependent variable. 
+
+```{r}
+# Scatterplot of LotArea and GarageArea vs SalePrice
+par(mfrow=c(1,2))
+plot(X, Y, xlab="LotArea", ylab="SalePrice", main="LotArea vs SalePrice")
+plot(Z, Y, xlab="GarageArea", ylab="SalePrice", main="GarageArea vs SalePrice")
+
+```
+
+*From the observation there seem to be no correlation between the LotArea and the SalePrice but there seem to be some form of correlation between*
+*the GarageArea and the SalePrice. This is not surprising since a large garage would most likely be associated with a large house which is poised to* *directly affect the saleprice.*
+
+Derive a correlation matrix for any three quantitative variables in the dataset.  
+
+```{r}
+
+corDF = train[c("LotArea", "GarageArea", "SalePrice")]
+
+corMatrix = cor(corDF, use = "complete.obs")
+
+print(corMatrix)
+
+#visualize the correlation matrix
+corrplot(corMatrix, method = "circle")
+
+```
+
+*From the corellation matrix we can conclude that there exist strong to weak correlation between the three variables*
+*SalePrice has a strong corellation with GarageArea and a weak corellation with LotArea with corellation coefficient of 0.62 and 0.26 respectively.*
+*LotArea and GarageArea have weak corellation with each other with a correlation coefficieant of 0.18.*
+
+Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval.  
+
+```{r}
+
+# Pairwise corelation between LotArea and SalePrice
+cor.test(corDF$LotArea, corDF$SalePrice, method = 'pearson', conf.level = 0.80)
+
+```
+```{r}
+
+# Pairwise corelation between GarageArea and SalePrice
+cor.test(corDF$GarageArea, corDF$SalePrice, method = 'pearson', conf.level = 0.80)
+
+```
+```{r}
+
+# Pairwise corelation between LotArea and GarageArea
+cor.test(corDF$LotArea, corDF$GarageArea, method = 'pearson', conf.level = 0.80)
+
+```
+
+Discuss the meaning of your analysis.
+
+*The tests above for pairwise corelation using pearson method estimated the association between the paired samples and computed a test of the value*
+*being zero. All the p-value are less than the significant level alpha = 0.08 and we thus conclude that the pairwise variables are correlated with *
+*respective correlation coefficient shown above.*
+
+Would you be worried about familywise error? Why or why not? (5 points)
+
+*Due to the fact that there are many variables in the train dataset that might have a huge impact on the correlation of the peirwise variables*
+*Yes i would be worried. Its possible to reject TRUE NULL Hypothesis unless all other variables are considered.*
+
+
+ 
+*Linear Algebra and Correlation.  *
+
+Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) 
+
+```{r}
+# Co-variance martix from above
+print(corMatrix)
+
+#To invert the Corelation Matrix use the solve() function
+precision_matrix = solve(corMatrix)
+
+print(precision_matrix)
+
+```
+
+Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix.
+
+```{r}
+
+# To multiply the correlation matrix by the precision matrix
+
+round((corMatrix %*% precision_matrix), 4)
+
+# Multiply precision matrix by the correlation matrix
+
+round((precision_matrix %*% corMatrix), 4)
+
+```
+
+*Both of the above operations produce an identity matrix.*
+
+Conduct LU decomposition on the matrix. (5 points)
+
+```{r}
+
+# LU decomposition of the correlation matrix
+
+lud_cor = lu(corMatrix)
+elu_cor = expand(lud_cor)
+
+#Lower triangular matrix
+cor_L = elu_cor$L
+print(cor_L)
+
+#Upper triangular matrix
+cor_U = elu_cor$U
+print(cor_U)
+
+```
+
+```{r}
+
+# LU decomposition of the precision matrix
+
+lud_prec = lu(precision_matrix)
+elu_prec = expand(lud_prec)
+
+#Lower triangular matrix
+prec_L = elu_prec$L
+print(prec_L)
+
+#Upper triangular matrix
+prec_U = elu_prec$U
+print(prec_U)
+
+```
+
+```{r}
+
+# Multiply cor_U with cor_L to get the original matrix since A = LU
+cor_L %*% cor_U
+
+# Ditto prec_U with prec_L
+prec_L %*% prec_U
+
+```
+
+*Multiplication of L & U returns their respective origina matrix as expected.*
+
+
+  
+*Calculus-Based Probability & Statistics. *
+
+Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.
+
+```{r}
+
+# We will use the GarageAre data. Check minimum and see if shifting is necessary.
+z = corDF$GarageArea
+min(z)
+
+hist(z, breaks = 50)
+
+```
+
+
+Then load the MASS package and run fitdistr to fit an exponential probability density function.  
+(See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  
+
+```{r}
+
+fit_exp = fitdistr(z, densfun = "exponential")
+print(fit_exp)
+
+```
+
+
+Find the optimal value of lambda for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, lambda)). 
+
+```{r}
+
+fit_exp$estimate
+
+samp = rexp(1000, fit_exp$estimate)
+                
+```
+
+ 
+
+Plot a histogram and compare it with a histogram of your original variable.   
+
+```{r}
+
+
+par(mfrow=c(1,2))
+hist(z, breaks = 100, xlab = "Observed_GarageArea", main = "Observed")
+hist(samp, breaks = 100, xlab = "Simulated_GarageArea", main = "Simulated")
+
+```
+
+*Visually from the histograms the simulated data is more heavily skewed to the right while the observed data is more concentrated to the centre.*
+
+Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).   
+
+```{r}
+
+quantile(samp, probs = c(0.05, 0.95))
+
+```
+
+Also generate a 95% confidence interval from the empirical data, assuming normality.  
+
+
+```{r}
+
+assume_normality = rnorm(length(z), mean(z), sd(z))
+hist(assume_normality)
+
+```
+
+```{r}
+
+mean_z = mean(z)
+n_z = nrow(z)
+sd_z = sd(z)
+
+se = qnorm(0.975) * sd_z/sqrt(n)
+
+left_int = mean_z - se
+print(left_int)
+
+right_int = mean_z + se
+print(right_int)
+
+```
+
+*The 95% confidence interval lies between 468.79 and 477.17.*
+
+
+Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss. (5 points)
+
+```{r}
+
+quantile(z, probs = c(0.05, 0.95))
+
+```
 
 
 
@@ -194,9 +518,9 @@ Report your Kaggle.com user name and score.
 #Load Training data set into a data frame and review the summary statistics for missing and or limited features.
 
 #Training set
-hd_tr = read.csv("train.csv", sep = ",", stringsAsFactors = FALSE)
+hd_tr = read.csv("https://raw.githubusercontent.com/igukusamuel/DATA-605-Final-Project/master/train.csv")
 
-summary(hd_tr)
+#summary(hd_tr)
 
 ```
 
@@ -212,7 +536,7 @@ hd_train <- hd_tr[, c("MSSubClass", "MSZoning", "LotArea", "LotShape", "LotConfi
                       "KitchenAbvGr", "KitchenQual", "TotRmsAbvGrd", "Functional", "GarageArea", "PavedDrive", 
                       "WoodDeckSF", "OpenPorchSF", "YrSold", "SaleType", "SaleCondition", "SalePrice")]
 
-summary(hd_train)
+#summary(hd_train)
 
 ```
 
@@ -225,7 +549,7 @@ hd_train = na.omit(hd_train)
 Model_1 = lm(SalePrice ~ ., data = hd_train)
 
 #Generate Summary Statisics
-summary(Model_1)
+#summary(Model_1)
 
 ```
 
@@ -237,7 +561,7 @@ Let us test how good our model performs on the test data set.
 ```{r}
 
 #Load Testing set
-hd_test = read.csv("test.csv", sep = ",")
+hd_test = read.csv("https://raw.githubusercontent.com/igukusamuel/DATA-605-Final-Project/master/test.csv")
 
 #Predict the saleprice for the testing data set
 PredictedDataModel = hd_test
@@ -248,20 +572,23 @@ PredictedDataModel$SalePrice = predict(Model_1, hd_test)
 Id = hd_test$Id
 SalePrice = PredictedDataModel$SalePrice
 
-
 # Combine the ID and the model predicted SalePrice values
-KaggleData_ModelDF = data.frame(cbind(Id, SalePrice))
+DF = data.frame(cbind(Id, SalePrice))
 
 #Replace all missing values with 0 in the Kaggle Data Frame
-kaggleData_modelDF[is.na(kaggleData_modelDF)] = 0
-kaggleData_modelDF = replace(kaggleData_modelDF, is.na(kaggleData_modelDF), 0)
+DF[is.na(DF)] = 0
+DF = replace(DF, is.na(DF), 0)
 
 #View the first 5 rows of the data frame
-print(head(kaggleData_modelDF, 30))
+print(head(DF, 5))
 
 # Write the predicted values into a KaggleData_Model .csv for submission.
-write.csv(kaggleData_modelDF,file = "kaggleData_model.csv", row.names = FALSE)
+#write.csv(DF, file = "KaggleData_Model_Prediction.csv", row.names = FALSE)
 
 ```
 
+Kaggle Username is *Samuel Kigamba*
 
+See submission documents : https://github.com/igukusamuel/DATA-605-Final-Project
+
+![](https://github.com/igukusamuel/DATA-605-Final-Project/blob/master/Kaggle_Submission.PNG)
